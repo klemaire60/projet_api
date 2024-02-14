@@ -1,0 +1,13 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<BorlandProject>
+	<Transactions>
+    <Transaction>2018/10/16 15:10:31.000.329,=C:\Users\BTS-SN2\Documents\Embarcadero\Studio\Projets\Project1PCH1.h</Transaction>
+    <Transaction>2018/10/16 15:10:31.000.437,=C:\Users\BTS-SN2\Documents\Embarcadero\Studio\Projets\Unit1.cpp</Transaction>
+    <Transaction>2018/10/16 15:35:16.000.669,C:\Users\BTS-SN2\Desktop\Nouveau dossier\ihm.h=C:\Users\BTS-SN2\Documents\Embarcadero\Studio\Projets\Unit1.h</Transaction>
+    <Transaction>2018/10/16 15:35:16.000.669,C:\Users\BTS-SN2\Desktop\Nouveau dossier\ihm.cpp=C:\Users\BTS-SN2\Documents\Embarcadero\Studio\Projets\Unit1.cpp</Transaction>
+    <Transaction>2018/10/16 15:35:16.000.669,C:\Users\BTS-SN2\Desktop\Nouveau dossier\ihm.dfm=C:\Users\BTS-SN2\Documents\Embarcadero\Studio\Projets\Unit1.dfm</Transaction>
+    <Transaction>2018/10/16 15:35:18.000.645,C:\Users\BTS-SN2\Desktop\Nouveau dossier\Project1PCH1.h=C:\Users\BTS-SN2\Documents\Embarcadero\Studio\Projets\Project1PCH1.h</Transaction>
+    <Transaction>2018/10/16 15:35:19.000.807,C:\Users\BTS-SN2\Desktop\Nouveau dossier\Project1.cbproj=C:\Users\BTS-SN2\Documents\Embarcadero\Studio\Projets\Project1.cbproj</Transaction>
+    <Transaction>2018/10/16 15:35:45.000.965,=C:\Users\BTS-SN2\Desktop\Nouveau dossier\com.cpp</Transaction>
+  </Transactions>
+</BorlandProject>
