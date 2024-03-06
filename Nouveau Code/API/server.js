@@ -1,11 +1,11 @@
 const express = require('express');
 const app = express();
 
-//récupération des 3 fichiers
+//récupération des différents fichiers js
+const login = require('./kevin/login')(express);
 const bastien = require('./bastien')(express);
 const yann = require('./yann')(express);
-const kevin = require('./kevin')(express);
 
 app.use('/api', bastien);
 app.use('/api', yann);
-app.use('/api', kevin);
+app.use('/api', login);

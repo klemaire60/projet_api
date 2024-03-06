@@ -3,7 +3,7 @@ module.exports = function(express) {
   
     router.get('/kevin-route', (req, res) => {
       // Code de kevin
-
+      
 
       res.send("Route de Kevin");
     });
