@@ -1,13 +1,19 @@
 const express = require('express');
-const mysql = require("mysql");
-const app = express();
-const login = require("./login");
+const app = express(); 
+const login = require('./kevin');
 
-login("test");
+connection.connect((err) => {
+    if (err) {
+      console.error('Erreur de connexion à la base de données :', err);
+      throw err;
+    }
+    console.log('Connecté à la base de données MySQL');
+  });
 
-const connection = mysql.createConnection({
-    host : 'localhost',
-    user : 'journalltrpedago',
-    password : 'Pedago1234',
-    database : 'journalltrpedago'
-});
+//récupération des différents fichiers js
+const bastien = require('./bastien')(express);
+const yann = require('./yann')(express);
+
+app.use('./api', yann);
+app.use('./api', bastien);
+app.use('./api', login);
