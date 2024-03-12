@@ -20,7 +20,6 @@ function appelApi(login, password) {
 
     const url = `http://${window.location.hostname}:8080/login`;
     
-    console.log(data);
     fetch(url, {
         method: 'POST',
         headers: {
@@ -36,7 +35,6 @@ function appelApi(login, password) {
     })
     .then(responseData => {
         if (responseData.success) {
-            console.log('Réponse de l\'API :', responseData);
             document.body.innerHTML = `	<div class='navbar_admin'>
             <h4>Interface de Gestion</h4>
             <div class='panel'>
