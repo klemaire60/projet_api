@@ -3,6 +3,8 @@ const cors = require('cors');
 const bodyParser = require('body-parser');
 const mysql = require('mysql');
 const sha1 = require('sha1');
+const connection = require('./db');
+const user = require('./user'); 
 
 const app = express();
 const port = 8080;
@@ -13,22 +15,6 @@ app.use(cors());
 // Middleware pour parser les requêtes JSON
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
-
-// Connexion à la base de données MySQL
-const connection = mysql.createConnection({
-  host: 'localhost',
-  user: 'journalltrpedago',
-  password: 'Pedago1234',
-  database: 'journalltrpedago'
-});
-
-connection.connect((err) => {
-  if (err) {
-    console.error('Erreur de connexion à la base de données :', err);
-    throw err;
-  }
-  console.log('Connecté à la base de données MySQL');
-});
 
 // Route pour la gestion de la connexion
 app.post('/login', (req, res) => {
@@ -45,18 +31,195 @@ app.post('/login', (req, res) => {
       console.error('Erreur lors de l\'exécution de la requête :', err);
       return res.status(500).json({ message: 'Erreur lors de la requête' });
     }
-    
     if (results.length === 0) {
-      return res.status(401).json({ message: 'Login incorrect' });
+      let body = `
+      <div class='login'>
+      <h3>
+      <i class='fa fa-user' aria-hidden='true'>Identification</i>
+      </h3>
+      <div class='panel'>
+      <img src='../assets/img/login.png'>
+      Erreur : Compte innexistant
+      <br>
+      <div class='form'>
+      Il semblerait que votre identifiant soit incorrecte. Vérifiez que vous avez correctement saisi ou si le problème persiste assurez vous d'être bien autorisé à accèder à ce site.
+      </div>
+      <input type='button' class='submit' value='Retour' onClick='history.back()'>
+      </div>
+      </div>
+      `
+      return res.send(body);
     }
     
     const dbPassword = results[0].password;
     const hashedPassword = sha1(password);
     
     if (dbPassword === hashedPassword) {
-      return res.json({ success: true });
+      let max_cours;
+      let max_ressources;
+      let currentUser = new user.user_info()
+      currentUser.select_user(login, (err, userData) => {
+        if (err) {
+          console.error('Erreur lors de la récupération des informations utilisateur :', err);
+          return res.status(500).json({ message: 'Erreur lors de la récupération des informations utilisateur' });
+        }
+        
+        connection.query("SELECT MAX(id_cour) AS max_cours FROM cour", (err, results) => {
+          if (err) {
+            console.error("Erreur lors de la récupération de max_cours :", err);
+            return res.status(500).json({ message: 'Erreur lors de la récupération de max_cours' });
+          }
+          
+          const maxCoursResult = results[0];
+          const max_cours = maxCoursResult ? maxCoursResult.max_cours || 0 : 0;
+          
+          connection.query("SELECT MAX(id) AS max_ressources FROM ressource", (err, results) => {
+            if (err) {
+              console.error("Erreur lors de la récupération de max_ressources :", err);
+              return res.status(500).json({ message: 'Erreur lors de la récupération de max_ressources' });
+            }
+            
+            const maxRessourcesResult = results[0];
+            const max_ressources = maxRessourcesResult ? maxRessourcesResult.max_ressources || 0 : 0;
+            
+            let body = `
+            ﻿
+            <div class='navbar_admin'>
+            <h4>Interface de Gestion</h4>
+            <div class='panel'>
+            <img src='"${currentUser.user_avatar}"'>
+            <p>Bienvenue ${currentUser.pseudo}</p>
+            <i class='fa fa-user-secret' aria-hidden='true'>Grade : ${currentUser.user_level}</i>
+            <a href='index.php?p=account'>
+            <div class='my_account'>
+            <i class='fa fa-user' aria-hidden='true'>Mon compte</i>
+            </div>
+            </a>
+            </div>
+            ${currentUser.user_level === 'administrateur' || currentUser.user_level === 'developpeur' ? `
+            <h3>
+            <i class='fa fa-bars' aria-hidden='true'>Gestion du Site</i>
+            <div class='button'>
+            <i class='fa fa-arrow-circle-o-down' aria-hidden='true'></i>
+            </div>
+            </h3> 
+            <div class='show_1'>
+            <a href='index.php?p=g_onglet'>
+            <span>Onglet</span>
+            </a>
+            <a href='index.php?p=actualite'>
+            <span>Actualité</span>
+            </a>
+            </div>
+            <div class='more'>...</div>
+            <h3>
+            <i class='fa fa-user' aria-hidden='true'>Gestion des Comptes</i>
+            <div class='button2'>
+            <i class='fa fa-arrow-circle-o-down' aria-hidden='true'></i>
+            </div>
+            </h3> 
+            <div class='show_2'>
+            <a href='index.php?p=addaccount'>
+            <span>Ajouter un utilisateur</span>
+            </a>		
+            <a href='index.php?p=listaccount'>
+            <span> Liste des utilisateurs</span>
+            </a>
+            </div>
+            <div class='more1'>...</div>
+            ` : ``}
+            <h3>
+            <i class='fa fa-file-pdf-o' aria-hidden='true'>Gestion des Cours</i>
+            <div class='button3'>
+            <i class='fa fa-arrow-circle-o-down' aria-hidden='true'></i>
+            </div>
+            </h3> 
+            <div class='show_3'>
+            <a href='index.php?p=a_chapitre'>
+            <span>Ajouter un chapitre</span>
+            <a href='index.php?p=a_cours'>
+            <span>Ajouter un cours</span>
+            <a href='index.php?p=a_ressource'>
+            <span> Ajouter ressource</span>
+            </a>
+            </div>
+            <div class='more2'>...</div>
+            <h3>
+            <i class='fa fa-bars' aria-hidden='true'>Listing</i>
+            <div class='button'>
+            <i class='fa fa-arrow-circle-o-down' aria-hidden='true'></i>
+            </div>
+            </h3> 
+            <a href='index.php?p=liste_chapitre'>
+            <span>Liste des chapitres</span>
+            </a>
+            <a href='index.php?p=liste_cours'>
+            <span>Liste des cours</span>
+            </a>
+            <a href='index.php?p=liste_ressources'>
+            <span> Liste des ressources</span>
+            </a>
+            <a href='index.php?p=liste_onglets'>
+            <span> Liste des onglets</span>
+            </a>
+            <a href='index.php?p=liste_actualite'>
+            <span> Liste des actualités</span>
+            </a>
+            <div class='sign'>
+            by &copy;jbourdon
+            </div>
+            </div>
+            <div id='home'>
+            <div class='title'>
+            <div class='button_deco'>
+            <a href='index.php?p=deconnexion'><i class='fa fa-power-off' aria-hidden='true'>Déconnexion</i></a>
+            </div>
+            <h3>Accueil</h3>
+            </div>
+            <div class='stat'>
+            <div class='box'>
+            <img src='../assets/img/livre.png' width=70%;>
+            <br>
+            <span class='line'></span> 
+            <h2> Nombre de cours : ${max_cours}</h2>
+            </div>
+            <div class='box'>
+            <img src='../assets/img/file.png' width=30%;>
+            <br>
+            <span class='line'></span> 
+            <h2> Nombre de ressource :${max_ressources}</h2>
+            </div>								
+            </div>
+            <div class='home_news'>
+            <h3>Information</h3>
+            <p> Bienvenue sur l'interface de gestion, ici vous allez pouvoir administrer votre site facilement et rapidement a l'aide de formulaire simple et fonctionnel. Vous pouvez également gêrer vos différents cours en ajoutant de nouveau 
+            ou en supprimant.</p>
+            <img src='../assets/img/capture_site.png' class='site'>
+            </div>
+            </div>
+            `
+            return res.send(body);
+            
+          });
+        });
+      });
     } else {
-      return res.status(401).json({ message: 'Mot de passe incorrect' });
+      let body = `
+      <div class='login'>
+      <h3><i class='fa fa-user' aria-hidden='true'></i> Identification </h3>
+      <div class='panel'>
+      <center>
+      <img src='../assets/img/login.png'>
+      Erreur : Mot de passe Invalide <br>
+      </center>
+      <div class='form'>
+      Votre Mot de Passe semble invalide, verifiez vos informations personnelles, si le problème persiste contactez un Administrateur.
+      </div>
+      <input type='button' class='submit' value='Retour' onClick='history.back()'>
+      </div>
+      </div>
+      `
+      return res.send(body);
     }
   });
 });

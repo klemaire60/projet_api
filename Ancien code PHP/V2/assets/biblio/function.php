@@ -680,7 +680,7 @@
 			}
 			else
 			{
-			$max=$req[0];
+				$max=$req[0];
 			}
 		}
 		
