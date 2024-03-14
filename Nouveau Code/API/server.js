@@ -18,7 +18,6 @@ app.use(cors());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
-
 //Peut-être supprimer
 /*
 app.get('/', (req, res) => {
@@ -371,9 +370,28 @@ app.post('/login', (req, res) => {
 
 //Début inscription
 
-app.post('' , () => {
+app.post('/register' , (req, res) => {
+  const {pseudo, password, mail, user_level, nom, prenom, user_avatar } = req.body;
+
+    if (!pseudo || !password || !mail || !nom || !prenom || !user_avatar) {
+    return res.status(400).json({ message: 'Veuillez renseignez tout les champs' });
+  }
+
+  password = sha1(password);
+
+  const sql = 'INSERT INTO user (pseudo, password, mail, user_level, nom, prenom, user_avatar) VALUES (?, ?, ?, ?, ?, ?, ?)';
+  connection.query(sql, [pseudo, password, mail, user_level, nom, prenom, user_avatar], (err, res) => {
+    if (err) {
+      console.error('Erreur lors de l\'enregistrement de l\'utilisateur : ' + err.stack);
+      return res.status(400).json('Erreur lors de l\'enregistrement de l\'utilisateur.');
+      
+    }
+    console.log('Utilisateur enregistré.');
+    res.send('Utilisateur enregistré.');
+    
+  });
   
-})
+});
 
 //Fin inscription
 
