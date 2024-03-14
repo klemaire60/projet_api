@@ -389,7 +389,9 @@ app.post('/register' , (req, res) => {
     }
     console.log('Utilisateur enregistré.');
     res.send('Utilisateur enregistré.');
+    
   });
+  
 });
 
 //Fin inscription
