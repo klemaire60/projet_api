@@ -171,22 +171,19 @@
                         </span>
                         <input type='text' name='prenom' placeholder=' Prenom'>
                     </div>
-                        <div class='input'>
-                            <span>
-                                <i class='fa fa-picture-o' aria-hidden='true'></i>
-                            </span>
-                            <input type='file' name='avatar' onchange='load_image(event)' REQUIRED>
-                        </div>
-                        <center>
-                            <input type='submit' class='submit' name='valider'>
-                        </center>
+                    <div class='input'>
+                        <span>
+                            <i class='fa fa-picture-o' aria-hidden='true'></i>
+                        </span>
+                        <input type='file' name='avatar' onchange='load_image(event)' REQUIRED>
                     </div>
+                    <center>
+                        <input type='submit' class='submit' name='valider'>
+                    </center>
                 </div>
-<<<<<<< HEAD
             </div>
         </form>
     </div>
-    
 </body>
 </html>
 <script type="text/javascript">
@@ -213,55 +210,35 @@
     $('.button3').click(function(){
         $('.show_3').slideToggle();
         $('.more2').toggleClass('visible');		
-=======
-            </form>
-        </div>
->>>>>>> ebdf7fc2576c6692bde724e420121506cce93884
-        
-    </body>
-    </html>
-    <script type="text/javascript">
-        $('.button').click(function(){
-            $('.show_1').slideToggle();
-            $('.more').toggleClass('visible');				
-        });
-        $('.button2').click(function(){
-            $('.show_2').slideToggle();
-            $('.more1').toggleClass('visible');		
-        });
-        $('.button3').click(function(){
-            $('.show_3').slideToggle();
-            $('.more2').toggleClass('visible');		
-            
-        });
-        
-        function showHint(name) 
+    });
+    
+    function showHint(name) 
+    {
+        var xhttp;
+        if (name.length == 0)//Chaine = 0 on affiche rien
         {
-            var xhttp;
-            if (name.length == 0)//Chaine = 0 on affiche rien
+            document.getElementById("name").innerHTML = "<i class='fa fa-book' aria-hidden='true'></i> Home";
+            return;
+        }
+        xhttp = new XMLHttpRequest();
+        xhttp.onreadystatechange = function() 
+        {
+            if (this.readyState == 4 && this.status == 200) 
             {
-                document.getElementById("name").innerHTML = "<i class='fa fa-book' aria-hidden='true'></i> Home";
-                return;
+                document.getElementById("name").innerHTML ="<i class='fa fa-book' aria-hidden='true'></i> "+ name;
             }
-            xhttp = new XMLHttpRequest();
-            xhttp.onreadystatechange = function() 
-            {
-                if (this.readyState == 4 && this.status == 200) 
-                {
-                    document.getElementById("name").innerHTML ="<i class='fa fa-book' aria-hidden='true'></i> "+ name;
-                }
-            };
-            xhttp.open("GET", "gethint.php?q="+name, true);
-            xhttp.send();
-        }	
-    </script>
-    <script>
-        var load_image = function(event) {
-            var link = document.getElementById('link');
-            link.src = URL.createObjectURL(event.target.files[0]);
         };
-        var load_background = function(event) {
-            var img_back = document.getElementById('img_back');
-            img_back.src = URL.createObjectURL(event.target.files[0]);
-        };
-    </script>
+        xhttp.open("GET", "gethint.php?q="+name, true);
+        xhttp.send();
+    }	
+</script>
+<script>
+    var load_image = function(event) {
+        var link = document.getElementById('link');
+        link.src = URL.createObjectURL(event.target.files[0]);
+    };
+    var load_background = function(event) {
+        var img_back = document.getElementById('img_back');
+        img_back.src = URL.createObjectURL(event.target.files[0]);
+    };
+</script>

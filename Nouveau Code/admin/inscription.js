@@ -1,3 +1,5 @@
+const { response } = require("express");
+
 document.addEventListener("DOMContentLoaded", function() {
 
     document.querySelector('form').addEventListener('submit', function(event) {
@@ -12,8 +14,15 @@ document.addEventListener("DOMContentLoaded", function() {
         const prenom = document.querySelector('input[name="prenom"]').value;
 
         if (password !== confirmPassword) {
-            alert("Les mots de passe ne correspondent pas !");
-            return;
+            return document.body.innerHTML = `
+            <div class='message'>
+            <h3>Erreur</h3>
+            <div class='info'>
+            <p>Les deux mots-de-passe saisient sont différent, veuillez vérifier vos informations</p>
+            <input type='button' class='return' value='Retour' onClick='history.back()'>
+            </div>
+            </div>
+            `;
         }
 
         const formData = new FormData();
@@ -30,9 +39,14 @@ document.addEventListener("DOMContentLoaded", function() {
             method: 'POST',
             body: formData
         })
-        .then(response => response.text())
-        .then(message => {
-            alert(message); 
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Erreur lors de la requête HTTP');
+            }
+            return response.json();
+        })
+        .then(responseData => {
+            document.body.innerHTML = responseData.body;
         })
         .catch(error => {
             console.error('Erreur lors de l\'envoi de la requête:', error);

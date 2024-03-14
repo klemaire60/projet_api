@@ -4,6 +4,7 @@ const bodyParser = require('body-parser');
 const mysql = require('mysql');
 const sha1 = require('sha1');
 const jwt = require('jsonwebtoken');
+const validator = require('validator');
 
 const connection = require('./db');
 const user = require('./user'); 
@@ -17,138 +18,6 @@ app.use(cors());
 // Middleware pour parser les requêtes JSON
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
-
-//Peut-être supprimer
-/*
-app.get('/', (req, res) => {
-  console.log('ok');
-  if(req.query.p === 'home') {
-    let body = `
-    ﻿
-    <div class='navbar_admin'>
-    <h4>Interface de Gestion</h4>
-    <div class='panel'>
-    <center>
-    <img src='"${currentUser.user_avatar}"'>
-    <p>Bienvenue ${currentUser.pseudo}</p>
-    <i class='fa fa-user-secret' aria-hidden='true'>Grade : ${currentUser.user_level}</i>
-    <a href='index.html?p=account'>
-    <div class='my_account'>
-    <i class='fa fa-user' aria-hidden='true'>Mon compte</i>
-    </div>
-    </a>
-    </center>
-    </div>
-    ${currentUser.user_level === 'administrateur' || currentUser.user_level === 'developpeur' ? `
-    <h3>
-    <i class='fa fa-bars' aria-hidden='true'>Gestion du Site</i>
-    <div class='button'>
-    <i class='fa fa-arrow-circle-o-down' aria-hidden='true'></i>
-    </div>
-    </h3> 
-    <div class='show_1'>
-    <a href='index.html?p=g_onglet'>
-    <span>Onglet</span>
-    </a>
-    <a href='index.html?p=actualite'>
-    <span>Actualité</span>
-    </a>
-    </div>
-    <div class='more'>...</div>
-    <h3>
-    <i class='fa fa-user' aria-hidden='true'>Gestion des Comptes</i>
-    <div class='button2'>
-    <i class='fa fa-arrow-circle-o-down' aria-hidden='true'></i>
-    </div>
-    </h3> 
-    <div class='show_2'>
-    <a href='index.html?p=addaccount'>
-    <span>Ajouter un utilisateur</span>
-    </a>		
-    <a href='index.html?p=listaccount'>
-    <span> Liste des utilisateurs</span>
-    </a>
-    </div>
-    <div class='more1'>...</div>
-    ` : ``}
-    <h3>
-    <i class='fa fa-file-pdf-o' aria-hidden='true'>Gestion des Cours</i>
-    <div class='button3'>
-    <i class='fa fa-arrow-circle-o-down' aria-hidden='true'></i>
-    </div>
-    </h3> 
-    <div class='show_3'>
-    <a href='index.html?p=a_chapitre'>
-    <span>Ajouter un chapitre</span>
-    <a href='index.html?p=a_cours'>
-    <span>Ajouter un cours</span>
-    <a href='index.html?p=a_ressource'>
-    <span> Ajouter ressource</span>
-    </a>
-    </div>
-    <div class='more2'>...</div>
-    <h3>
-    <i class='fa fa-bars' aria-hidden='true'>Listing</i>
-    <div class='button'>
-    <i class='fa fa-arrow-circle-o-down' aria-hidden='true'></i>
-    </div>
-    </h3> 
-    <a href='index.html?p=liste_chapitre'>
-    <span>Liste des chapitres</span>
-    </a>
-    <a href='index.html?p=liste_cours'>
-    <span>Liste des cours</span>
-    </a>
-    <a href='index.html?p=liste_ressources'>
-    <span> Liste des ressources</span>
-    </a>
-    <a href='index.html?p=liste_onglets'>
-    <span> Liste des onglets</span>
-    </a>
-    <a href='index.html?p=liste_actualite'>
-    <span> Liste des actualités</span>
-    </a>
-    <div class='sign'>
-    by &copy;jbourdon
-    </div>
-    </div>
-    <div id='home'>
-    <div class='title'>
-    <div class='button_deco'>
-    <a href='index.html?p=deconnexion'>
-    <i class='fa fa-power-off' aria-hidden='true'>Déconnexion</i>
-    </a>
-    </div>
-    <h3>Accueil</h3>
-    </div>
-    <div class='stat'>
-    <div class='box'>
-    <img src='../assets/img/livre.png' width=70%;>
-    <br>
-    <span class='line'></span> 
-    <h2> Nombre de cours : ${max_cours}</h2>
-    </div>
-    <div class='box'>
-    <img src='../assets/img/file.png' width=30%;>
-    <br>
-    <span class='line'></span> 
-    <h2> Nombre de ressource :${max_ressources}</h2>
-    </div>								
-    </div>
-    <div class='home_news'>
-    <h3>Information</h3>
-    <p> Bienvenue sur l'interface de gestion, ici vous allez pouvoir administrer votre site facilement et rapidement a l'aide de formulaire simple et fonctionnel. Vous pouvez également gêrer vos différents cours en ajoutant de nouveau 
-    ou en supprimant.</p>
-    <center>
-    <img src='../assets/img/capture_site.png' class='site'>
-    </center>
-    </div>
-    </div>
-    `
-    res.send(body);
-  } 
-})
-*/
 
 // Route pour la gestion de la connexion
 app.post('/login', (req, res) => {
@@ -369,8 +238,6 @@ app.post('/login', (req, res) => {
   });
 });
 
-//Début inscription
-
 app.post('/register' , (req, res) => {
   const {pseudo, password, mail, user_level, nom, prenom, user_avatar } = req.body;
 
@@ -378,23 +245,73 @@ app.post('/register' , (req, res) => {
     return res.status(400).json({ message: 'Veuillez renseignez tout les champs' });
   }
 
-  password = sha1(password);
+  if(!validator.isEmail(mail)) {
+    let body = `
+    <div class='message'>
+    <h3>Erreur</h3>
+    <div class='info'>
+    L'adresse mail utilisée est invalide, veuillez en saisir une autre.<p>
+    <input type='button' class='return' value='Retour' onClick='history.back()'>
+    </div>
+    </div>
+    `;
 
-  const sql = 'INSERT INTO user (pseudo, password, mail, user_level, nom, prenom, user_avatar) VALUES (?, ?, ?, ?, ?, ?, ?)';
-  connection.query(sql, [pseudo, password, mail, user_level, nom, prenom, user_avatar], (err, res) => {
-    if (err) {
-      console.error('Erreur lors de l\'enregistrement de l\'utilisateur : ' + err.stack);
-      return res.status(400).json('Erreur lors de l\'enregistrement de l\'utilisateur.');
-      
-    }
-    console.log('Utilisateur enregistré.');
-    res.send('Utilisateur enregistré.');
-    
-  });
+    return res.json({body : body});
+  }
   
-});
+  const sqlVerif = `SELECT pseudo, mail FROM account WHERE pseudo = ${pseudo} OR mail = ${mail}`;
+  
+  connection.query(sqlVerif, (err, results) => {
+    if(err) {
+      console.log("Erreur lors de la requête SQL", err)
+      return res.status(500).json({ message: 'Erreur lors de la requête' });
+    }
+    
+    if(results.length === 0) {
+      password = sha1(password);
+      const sql = 'INSERT INTO user (pseudo, password, mail, user_level, nom, prenom, user_avatar) VALUES (?, ?, ?, ?, ?, ?, ?)';
+      connection.query(sql, [pseudo, password, mail, user_level, nom, prenom, user_avatar], (err) => {
+        if (err) {
+          console.error('Erreur lors de l\'enregistrement de l\'utilisateur : ', err);
 
-//Fin inscription
+          let body = `
+          <div class='message'>
+					<h3>Erreur</h3>
+					<div class='info'>
+					Problème lors de l'enregistrement, veuillez réessayer dans un instant.<p>
+					<input type='button' class='return' value='Retour' onClick='history.back()'>
+					</div>
+					</div>
+          `;
+          return res.json({body : body});
+        }
+        console.log('Nouvel utilisateur enregistré.');
+
+        let body = `
+        <div class='message'>
+        <h3>Réussie</h3>
+        <div class='info'>
+        <p>La création de l'utilisateur est terminée, n'oubliez pas de fournir l'identifiant et le mot-de-passe à la personne concerné pour qu'elle puisse se connecter.</p>
+        <input type='button' class='return' value='Retour' onClick='history.back()'>
+        </div>
+        </div>
+        `;
+        return res.json({body : body});
+      });
+    } else {
+      let body = `
+					<div class='message'>
+					<h3>Erreur</h3>
+					<div class='info'>
+					L'identifiant que vous souhaitez crée existe déjà, veuillez en saisir un autre.<p>
+					<input type='button' class='return' value='Retour' onClick='history.back()'>
+					</div>
+					</div>
+      `
+      return res.json({ body : body});
+    }
+  })
+});
 
 // Démarrage du serveur
 app.listen(port, () => {
