@@ -17,15 +17,8 @@
     <div class='navbar_admin'>
         <h4>Interface de Gestion</h4>
         <center>
-            <div class='panel'>
-                <img src='../assets/img_user/Github-icon.png'>
-                <p>Bienvenue</p>
-                <i class='fa fa-user-secret' aria-hidden='true'>Grade : </i>
-                <a href='index.php?p=account'>
-                    <div class='my_account'>
-                        <i class='fa fa-user' aria-hidden='true'>Mon compte</i>
-                    </div>
-                </a>
+            <div class='panel' id='panel'>
+                
             </div>
         </center>
         <h3>
@@ -174,10 +167,9 @@
                     </div>
                     <div class='input'>
                         <span>
-                            <i class='fa fa-lock' aria-hidden='true'>
-                                <input type='text' name='prenom' placeholder=' Prénom'>
-                            </i>
+                            <i class='fa fa-user' aria-hidden='true'></i>
                         </span>
+                        <input type='text' name='prenom' placeholder=' Prenom'>
                     </div>
                     <div class='input'>
                         <span>
@@ -192,9 +184,21 @@
             </div>
         </form>
     </div>
-</div>	
+    
 </body>
 </html>
+<script type="text/javascript">
+    document.getElementById('panel').innerHTML = `
+    <img src='${document.cookie.avatar}'>
+    <p>Bienvenue ${document.cookie.name}</p>
+    <i class='fa fa-user-secret' aria-hidden='true'>Grade : ${document.cookie.grade}</i>
+    <a href=''>
+        <div class='my_account'>
+            <i class='fa fa-user' aria-hidden='true'>Mon compte</i>
+        </div>
+    </a>
+    `
+</script>
 <script type="text/javascript">
     $('.button').click(function(){
         $('.show_1').slideToggle();
