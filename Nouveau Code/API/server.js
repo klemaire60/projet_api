@@ -281,7 +281,7 @@ app.post('/register' , (req, res) => {
       // Ajout des informations de l'utilisateur dans la base de données
       // Initialisation
       const sql = 'INSERT INTO user (pseudo, password, mail, user_level, nom, prenom, user_avatar) VALUES (?, ?, ?, ?, ?, ?, ?)';
-      // Tentative d'nregistrement
+      // Tentative d'enregistrement
       connection.query(sql, [pseudo, password, mail, user_level, nom, prenom, user_avatar], (err) => {
         if (err) {
           console.error('Erreur lors de l\'enregistrement de l\'utilisateur : ', err);
