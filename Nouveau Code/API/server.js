@@ -23,6 +23,7 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.post('/login', (req, res) => {
   const { login, password } = req.body;
   
+  // Si l'un des deux champs est vide
   if (!login || !password) {
     return res.status(400).json({ message: 'Login et mot de passe requis' });
   }
@@ -34,7 +35,7 @@ app.post('/login', (req, res) => {
       console.error('Erreur lors de l\'exécution de la requête :', err);
       return res.status(500).json({ message: 'Erreur lors de la requête' });
     }
-    if (results.length === 0) {
+    if (results.length === 0) { // Identifiant incorrect
       let body = `
       <div class='login'>
       <h3>
@@ -42,10 +43,10 @@ app.post('/login', (req, res) => {
       </h3>
       <div class='panel'>
       <img src='../assets/img/login.png'>
-      Erreur : Compte innexistant
+      Erreur : Compte inexistant
       <br>
       <div class='form'>
-      Il semblerait que votre identifiant soit incorrecte. Vérifiez que vous avez correctement saisi ou si le problème persiste assurez vous d'être bien autorisé à accèder à ce site.
+      Il semblerait que votre identifiant soit incorrect. Vérifiez que vous avez correctement saisi ou si le problème persiste, assurez-vous d'être bien autorisé à accèder à ce site.
       </div>
       <input type='button' class='submit' value='Retour' onClick='history.back()'>
       </div>
@@ -61,6 +62,8 @@ app.post('/login', (req, res) => {
       let max_cours;
       let max_ressources;
       let currentUser = new user.user_info()
+
+      // Récupération informations user, max_cours, et max_ressources
       currentUser.select_user(login, (err, userData) => {
         if (err) {
           console.error('Erreur lors de la récupération des informations utilisateur :', err);
@@ -85,6 +88,8 @@ app.post('/login', (req, res) => {
             const maxRessourcesResult = results[0];
             const max_ressources = maxRessourcesResult ? maxRessourcesResult.max_ressources || 0 : 0;
             
+            // Corps: Interface administrateur
+
             let body = `
             ﻿
             <div class='navbar_admin'>
@@ -103,7 +108,7 @@ app.post('/login', (req, res) => {
             </div>
             ${currentUser.user_level === 'administrateur' || currentUser.user_level === 'developpeur' ? `
             <h3>
-            <i class='fa fa-bars' aria-hidden='true'>Gestion du Site</i>
+            <i class='fa fa-bars' aria-hidden='true'>Gestion du site</i>
             <div class='button'>
             <i class='fa fa-arrow-circle-o-down' aria-hidden='true'></i>
             </div>
@@ -118,7 +123,7 @@ app.post('/login', (req, res) => {
             </div>
             <div class='more'>...</div>
             <h3>
-            <i class='fa fa-user' aria-hidden='true'>Gestion des Comptes</i>
+            <i class='fa fa-user' aria-hidden='true'>Gestion des comptes</i>
             <div class='button2'>
             <i class='fa fa-arrow-circle-o-down' aria-hidden='true'></i>
             </div>
@@ -134,7 +139,7 @@ app.post('/login', (req, res) => {
             <div class='more1'>...</div>
             ` : ``}
             <h3>
-            <i class='fa fa-file-pdf-o' aria-hidden='true'>Gestion des Cours</i>
+            <i class='fa fa-file-pdf-o' aria-hidden='true'>Gestion des cours</i>
             <div class='button3'>
             <i class='fa fa-arrow-circle-o-down' aria-hidden='true'></i>
             </div>
@@ -197,7 +202,7 @@ app.post('/login', (req, res) => {
             </div>
             <div class='home_news'>
             <h3>Information</h3>
-            <p> Bienvenue sur l'interface de gestion, ici vous allez pouvoir administrer votre site facilement et rapidement a l'aide de formulaire simple et fonctionnel. Vous pouvez également gêrer vos différents cours en ajoutant de nouveau 
+            <p> Bienvenue sur l'interface de gestion, ici vous allez pouvoir administrer votre site facilement et rapidement à l'aide de formulaires simples et fonctionnels. Vous pouvez également gérer vos différents cours en ajoutant de nouveaux 
             ou en supprimant.</p>
             <center>
             <img src='../assets/img/capture_site.png' class='site'>
@@ -205,8 +210,10 @@ app.post('/login', (req, res) => {
             </div>
             </div>
             `
-            const token = jwt.sign({ login }, 'secret_key', { expiresIn: '2h' }); // Générer un token avec une clé secrète et une expiration de 1 heure
+            // Générer un token avec une clé secrète, qui expire dans 2 heures
+            const token = jwt.sign({ login }, 'secret_key', { expiresIn: '2h' });
             
+            // Informations en réponse json, en comprenant le token généré
             return res.json({
               body : body,
               token : token,
@@ -227,7 +234,7 @@ app.post('/login', (req, res) => {
       Erreur : Mot de passe Invalide <br>
       </center>
       <div class='form'>
-      Votre Mot de Passe semble invalide, verifiez vos informations personnelles, si le problème persiste contactez un Administrateur.
+      Votre Mot de passe semble invalide, vérifiez vos informations personnelles. Si le problème persiste, contactez un administrateur.
       </div>
       <input type='button' class='submit' value='Retour' onClick='history.back()'>
       </div>
@@ -241,8 +248,9 @@ app.post('/login', (req, res) => {
 app.post('/register' , (req, res) => {
   const {pseudo, password, mail, user_level, nom, prenom, user_avatar } = req.body;
 
+    // Tous les champs non remplis
     if (!pseudo || !password || !mail || !nom || !prenom || !user_avatar) {
-    return res.status(400).json({ message: 'Veuillez renseignez tout les champs' });
+    return res.status(400).json({ message: 'Veuillez renseignez tous les champs' });
   }
 
   if(!validator.isEmail(mail)) {
@@ -259,6 +267,7 @@ app.post('/register' , (req, res) => {
     return res.json({body : body});
   }
   
+  // Vérification de la requête SQL
   const sqlVerif = `SELECT pseudo, mail FROM account WHERE pseudo = ${pseudo} OR mail = ${mail}`;
   
   connection.query(sqlVerif, (err, results) => {
@@ -269,7 +278,10 @@ app.post('/register' , (req, res) => {
     
     if(results.length === 0) {
       password = sha1(password);
+      // Ajout des informations de l'utilisateur dans la base de données
+      // Initialisation
       const sql = 'INSERT INTO user (pseudo, password, mail, user_level, nom, prenom, user_avatar) VALUES (?, ?, ?, ?, ?, ?, ?)';
+      // Tentative d'nregistrement
       connection.query(sql, [pseudo, password, mail, user_level, nom, prenom, user_avatar], (err) => {
         if (err) {
           console.error('Erreur lors de l\'enregistrement de l\'utilisateur : ', err);
@@ -285,13 +297,14 @@ app.post('/register' , (req, res) => {
           `;
           return res.json({body : body});
         }
+        // Confirmation
         console.log('Nouvel utilisateur enregistré.');
 
         let body = `
         <div class='message'>
         <h3>Réussie</h3>
         <div class='info'>
-        <p>La création de l'utilisateur est terminée, n'oubliez pas de fournir l'identifiant et le mot-de-passe à la personne concerné pour qu'elle puisse se connecter.</p>
+        <p>La création de l'utilisateur est terminée, n'oubliez pas de fournir l'identifiant et le mot de passe à la personne concernée pour qu'elle puisse se connecter.</p>
         <input type='button' class='return' value='Retour' onClick='history.back()'>
         </div>
         </div>
@@ -303,7 +316,7 @@ app.post('/register' , (req, res) => {
 					<div class='message'>
 					<h3>Erreur</h3>
 					<div class='info'>
-					L'identifiant que vous souhaitez crée existe déjà, veuillez en saisir un autre.<p>
+					L'identifiant que vous souhaitez créer existe déjà, veuillez en saisir un autre.<p>
 					<input type='button' class='return' value='Retour' onClick='history.back()'>
 					</div>
 					</div>
