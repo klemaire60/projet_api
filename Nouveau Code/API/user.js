@@ -1,6 +1,9 @@
 const connection = require('./db');
 
+// Création d'une classe utilisateur
 class user_info {
+
+    // attributs de l'utilisateur
     constructor() {
         this.pseudo = null;
         this.nom = null;
@@ -14,6 +17,7 @@ class user_info {
         this.id_account = null;
     }
 
+    // Méthode de sélection d'utilisateur avec en paramètre un pseudo
     select_user(pseudo, callback) {
         const sql = `SELECT pseudo, nom, prenom, mail, date_creation, last_connexion, ip_connexion, user_level, user_avatar, id_account FROM account WHERE pseudo = ?`;
         
