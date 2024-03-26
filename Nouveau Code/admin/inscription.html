@@ -187,10 +187,13 @@
 </body>
 </html>
 <script type="text/javascript">
+    let avatar = document.cookie.avatar;
+    let name = document.cookie.name;
+    let grade = document.cookie.grade;
     document.getElementById('panel').innerHTML = `
-    <img src='${document.cookie.avatar}'>
-    <p>Bienvenue ${document.cookie.name}</p>
-    <i class='fa fa-user-secret' aria-hidden='true'>Grade : ${document.cookie.grade}</i>
+    <img src='${avatar}'>
+    <p>Bienvenue ${name}</p>
+    <i class='fa fa-user-secret' aria-hidden='true'>Grade : ${grade}</i>
     <a href=''>
         <div class='my_account'>
             <i class='fa fa-user' aria-hidden='true'>Mon compte</i>

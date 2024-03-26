@@ -6,6 +6,8 @@ const mysql = require('mysql');
 const sha1 = require('sha1');
 const jwt = require('jsonwebtoken');
 const validator = require('validator');
+const multer = require('multer');
+const path = require('path');
 
 const connection = require('./db');
 const user = require('./user');
@@ -19,6 +21,39 @@ app.use(cors());
 // Middleware pour parser les requêtes JSON
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
+
+// Set storage engine
+const storage = multer.diskStorage({
+  destination: './assets/img_user/',
+  filename: function(req, file, cb) {
+      cb(null, file.fieldname + '-' + Date.now() + path.extname(file.originalname));
+  }
+});
+
+// Initialize upload
+const upload = multer({
+  storage: storage,
+  limits: { fileSize: 1000000 }, // 1 MB limit
+  fileFilter: function(req, file, cb) {
+      checkFileType(file, cb);
+  }
+}).single('avatar');
+
+// Check file type
+function checkFileType(file, cb) {
+  // Allowed ext
+  const filetypes = /jpeg|jpg|png|gif/;
+  // Check ext
+  const extname = filetypes.test(path.extname(file.originalname).toLowerCase());
+  // Check mime
+  const mimetype = filetypes.test(file.mimetype);
+
+  if (mimetype && extname) {
+      return cb(null, true);
+  } else {
+      cb('Error: Images only!');
+  }
+}
 
 // Route pour la gestion de la connexion
 app.post('/login', (req, res) => {
@@ -82,7 +117,7 @@ app.post('/login', (req, res) => {
 
           const maxCoursResult = results[0];
           const max_cours = maxCoursResult ? maxCoursResult.max_cours || 0 : 0;
-
+          
           connection.query("SELECT MAX(id) AS max_ressources FROM ressource", (err, results) => {
             if (err) {
               console.error("Erreur lors de la récupération de max_ressources :", err);
@@ -92,7 +127,7 @@ app.post('/login', (req, res) => {
             const maxRessourcesResult = results[0];
             const max_ressources = maxRessourcesResult ? maxRessourcesResult.max_ressources || 0 : 0;
 
-            // Confirmation: body interface administrateur
+            // Confirmation: body interface utilisateur
 
             let body = `
             ﻿
@@ -216,6 +251,9 @@ app.post('/login', (req, res) => {
             `
             // Générer un token avec une clé secrète, qui expire dans 2 heures
             const token = jwt.sign({ login }, 'secret_key', { expiresIn: '2h' });
+            res.cookie('token', token, { httpOnly: true });
+
+           
 
             // Informations en réponse json, en comprenant le token généré
             return res.json({
@@ -253,85 +291,95 @@ app.post('/login', (req, res) => {
 app.post('/register', (req, res) => {
   const { pseudo, password, mail, user_level, nom, prenom, user_avatar } = req.body;
 
-  // Tous les champs non remplis
-  if (!pseudo || !password || !mail || !nom || !prenom || !user_avatar) {
-    return res.status(400).json({ message: 'Veuillez renseignez tous les champs' });
-  }
-
-  // Adresse mail invalide
-  if (!validator.isEmail(mail)) {
-    let body = `
-    <div class='message'>
-      <h3>Erreur</h3>
-      <div class='info'>
-        L'adresse mail utilisée est invalide, veuillez en saisir une autre.<p>
-        <input type='button' class='return' value='Retour' onClick='history.back()'>
-      </div>
-    </div>
-    `;
-
-    return res.json({ body: body });
-  }
-
-  // Vérification de la requête SQL
-  const sqlVerif = `SELECT pseudo, mail FROM account WHERE pseudo = ${pseudo} OR mail = ${mail}`;
-
-  // Tentative de vérification
-  connection.query(sqlVerif, (err, results) => {
+  upload(req, res, (err) => {
     if (err) {
-      console.log("Erreur lors de la requête SQL", err)
-      return res.status(500).json({ message: 'Erreur lors de la requête' });
-    }
+        return res.status(400).json({ message: err });
+    } else {
+      // File uploaded successfully, continue with your registration logic
+      const { pseudo, password, mail, user_level, nom, prenom } = req.body;
+      const user_avatar = req.file ? req.file.filename : ''; // Assuming filename is stored in database
 
-    if (results.length === 0) {
-      password = sha1(password);
-      // Ajout des informations de l'utilisateur dans la base de données
-      // Initialisation
-      const sql = 'INSERT INTO user (pseudo, password, mail, user_level, nom, prenom, user_avatar) VALUES (?, ?, ?, ?, ?, ?, ?)';
-      // Tentative d'enregistrement
-      connection.query(sql, [pseudo, password, mail, user_level, nom, prenom, user_avatar], (err) => {
-        if (err) {
-          console.error('Erreur lors de l\'enregistrement de l\'utilisateur : ', err);
+      // Tous les champs non remplis
+      if (!pseudo || !password || !mail || !nom || !prenom || !user_avatar) {
+        return res.status(400).json({ message: 'Veuillez renseignez tous les champs' });
+      }
 
-          let body = `
-          <div class='message'>
-					  <h3>Erreur</h3>
-					  <div class='info'>
-					    Problème lors de l'enregistrement, veuillez réessayer dans un instant.<p>
-					    <input type='button' class='return' value='Retour' onClick='history.back()'>
-					  </div>
-					</div>
-          `;
-          return res.json({ body: body });
-        }
-        // Confirmation
-        console.log('Nouvel utilisateur enregistré.');
-
+      // Adresse mail invalide
+      if (!validator.isEmail(mail)) {
         let body = `
         <div class='message'>
-          <h3>Réussie</h3>
+          <h3>Erreur</h3>
           <div class='info'>
-            <p>La création de l'utilisateur est terminée, n'oubliez pas de fournir l'identifiant et le mot de passe à la personne concernée pour qu'elle puisse se connecter.</p>
+            L'adresse mail utilisée est invalide, veuillez en saisir une autre.<p>
             <input type='button' class='return' value='Retour' onClick='history.back()'>
           </div>
         </div>
         `;
+
         return res.json({ body: body });
-      });
-    } else {
-      // Identifiant déjà existant
-      let body = `
-			<div class='message'>
-				<h3>Erreur</h3>
-				<div class='info'>
-					L'identifiant que vous souhaitez créer existe déjà, veuillez en saisir un autre.<p>
-				<input type='button' class='return' value='Retour' onClick='history.back()'>
-				</div>
-			</div>
-      `
-      return res.json({ body: body });
+      }
+
+      // Vérification de la requête SQL
+      const sqlVerif = `SELECT pseudo, mail FROM account WHERE pseudo = ${pseudo} OR mail = ${mail}`;
+
+      // Tentative de vérification
+      connection.query(sqlVerif, (err, results) => {
+        if (err) {
+          console.log("Erreur lors de la requête SQL", err)
+          return res.status(500).json({ message: 'Erreur lors de la requête' });
+        }
+
+        if (results.length === 0) {
+          password = sha1(password);
+          // Ajout des informations de l'utilisateur dans la base de données
+          // Initialisation
+          const sql = 'INSERT INTO user (pseudo, password, mail, user_level, nom, prenom, user_avatar) VALUES (?, ?, ?, ?, ?, ?, ?)';
+          // Tentative d'enregistrement
+          connection.query(sql, [pseudo, password, mail, user_level, nom, prenom, user_avatar], (err) => {
+            if (err) {
+              console.error('Erreur lors de l\'enregistrement de l\'utilisateur : ', err);
+
+              let body = `
+              <div class='message'>
+                <h3>Erreur</h3>
+                <div class='info'>
+                  Problème lors de l'enregistrement, veuillez réessayer dans un instant.<p>
+                  <input type='button' class='return' value='Retour' onClick='history.back()'>
+                </div>
+              </div>
+              `;
+              return res.json({ body: body });
+            }
+            // Confirmation
+            console.log('Nouvel utilisateur enregistré.');
+
+            let body = `
+            <div class='message'>
+              <h3>Réussie</h3>
+              <div class='info'>
+                <p>La création de l'utilisateur est terminée, n'oubliez pas de fournir l'identifiant et le mot de passe à la personne concernée pour qu'elle puisse se connecter.</p>
+                <input type='button' class='return' value='Retour' onClick='history.back()'>
+              </div>
+            </div>
+            `;
+            return res.json({ body: body });
+          });
+        } else {
+          // Identifiant déjà existant
+          let body = `
+          <div class='message'>
+            <h3>Erreur</h3>
+            <div class='info'>
+              L'identifiant que vous souhaitez créer existe déjà, veuillez en saisir un autre.<p>
+            <input type='button' class='return' value='Retour' onClick='history.back()'>
+            </div>
+          </div>
+          `
+          return res.json({ body: body });
+        }
+      })
     }
-  })
+  });
 });
 
 // Démarrage du serveur

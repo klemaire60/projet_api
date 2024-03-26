@@ -21,11 +21,13 @@ function appelApi(login, password) {
         password: password 
     };
     const url = `http://${window.location.hostname}:8080/login`;
+
     
     fetch(url, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
+            //'Authorization': `Bearer ${localStorage.getItem('token')}`,
         },
         body: JSON.stringify(data),
     })

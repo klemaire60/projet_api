@@ -2,6 +2,7 @@ const { response } = require("express");
 
 document.addEventListener("DOMContentLoaded", function() {
 
+
     document.querySelector('form').addEventListener('submit', function(event) {
         event.preventDefault();
 
@@ -12,15 +13,16 @@ document.addEventListener("DOMContentLoaded", function() {
         const level = document.querySelector('select[name="level"]').value;
         const nom = document.querySelector('input[name="nom"]').value;
         const prenom = document.querySelector('input[name="prenom"]').value;
+        const avatar = document.querySelector('input[name="avatar"]').files[0];
 
         if (password !== confirmPassword) {
             return document.body.innerHTML = `
             <div class='message'>
-            <h3>Erreur</h3>
-            <div class='info'>
-            <p>Les deux mots-de-passe saisient sont différent, veuillez vérifier vos informations</p>
-            <input type='button' class='return' value='Retour' onClick='history.back()'>
-            </div>
+                <h3>Erreur</h3>
+                <div class='info'>
+                    <p>Les deux mots de passe saisis sont différents, veuillez vérifier vos informations</p>
+                    <input type='button' class='return' value='Retour' onClick='history.back()'>
+                </div>
             </div>
             `;
         }
@@ -32,6 +34,7 @@ document.addEventListener("DOMContentLoaded", function() {
         formData.append('level', level);
         formData.append('nom', nom);
         formData.append('prenom', prenom);
+        formData.append("avatar", avatar);
 
         const url = `http://${window.location.hostname}:8080/register`;
 
