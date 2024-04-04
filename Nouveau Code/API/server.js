@@ -33,7 +33,7 @@ const storage = multer.diskStorage({
 // Initialize upload
 const upload = multer({
   storage: storage,
-  limits: { fileSize: 1000000 }, // 1 MB limit
+  limits: { fileSize: 1000000 }, // limite de 1 MB
   fileFilter: function(req, file, cb) {
       checkFileType(file, cb);
   }
@@ -128,7 +128,7 @@ app.post('/login', (req, res) => {
             const max_ressources = maxRessourcesResult ? maxRessourcesResult.max_ressources || 0 : 0;
 
             // Confirmation: body interface utilisateur
-
+            
             let body = `
             ﻿
             <div class='navbar_admin'>
@@ -249,19 +249,57 @@ app.post('/login', (req, res) => {
               </div>
             </div>
             `
+            const userId = userData.id_account;
             // Générer un token avec une clé secrète, qui expire dans 2 heures
             const token = jwt.sign({ login }, 'secret_key', { expiresIn: '2h' });
             res.cookie('token', token, { httpOnly: true });
 
-           
+           // Vérifier si l'utilisateur a déjà un token dans la base de données
+            const selectTokenQuery = 'SELECT * FROM tokens WHERE id_account = ?';
+            connection.query(selectTokenQuery, [userId], (err, results) => {
+                if (err) {
+                    console.error('Erreur lors de la récupération du token de l\'utilisateur :', err);
+                    return res.status(500).json({ message: 'Erreur lors de la récupération du token de l\'utilisateur' });
+                }
 
-            // Informations en réponse json, en comprenant le token généré
-            return res.json({
-              body: body,
-              token: token,
-              name: currentUser.pseudo,
-              grade: currentUser.user_level,
-              avatar: currentUser.user_avatar
+                // Si l'utilisateur a déjà un token dans la base de données, mettez à jour le token existant
+                if (results.length > 0) {
+                    const updateTokenQuery = 'UPDATE tokens SET id_token = ?, date_expi = ? WHERE id_account = ?';
+                    const expirationDate = new Date(Date.now() + 2 * 60 * 60 * 1000); // 2 heures à partir de maintenant
+                    connection.query(updateTokenQuery, [token, expirationDate, userId], (err, result) => {
+                        if (err) {
+                            console.error('Erreur lors de la mise à jour du token dans la base de données :', err);
+                            return res.status(500).json({ message: 'Erreur lors de la mise à jour du token dans la base de données' });
+                        }
+                        // Réussite de la mise à jour, renvoyer une réponse avec le token ou toute autre information nécessaire
+                        return res.json({
+                            body: body,
+                            token: token,
+                            name: currentUser.pseudo,
+                            grade: currentUser.user_level,
+                            avatar: currentUser.user_avatar
+                        });
+                    });
+                } else {
+                    // Si l'utilisateur n'a pas encore de token, insérez-le comme expliqué dans la réponse précédente
+                    const insertTokenQuery = 'INSERT INTO tokens (id_token, id_account, date_expi) VALUES (?, ?, ?)';
+                    const expirationDate = new Date(Date.now() + 2 * 60 * 60 * 1000); // 2 heures à partir de maintenant
+                    connection.query(insertTokenQuery, [token, userId, expirationDate], (err, result) => {
+                        if (err) {
+                            console.error('Erreur lors de l\'insertion du token dans la base de données :', err);
+                            return res.status(500).json({ message: 'Erreur lors de l\'insertion du token dans la base de données' });
+                        }
+                        // Réussite de l'insertion, renvoyer une réponse avec le token ou toute autre information nécessaire
+                        return res.json({
+                            body: body,
+                            token: token,
+                            name: currentUser.pseudo,
+                            grade: currentUser.user_level,
+                            avatar: currentUser.user_avatar
+                        });
+                        
+                    });
+                }
             });
           });
         });

@@ -186,10 +186,12 @@
     </div>
 </body>
 </html>
+
 <script type="text/javascript">
     let avatar = document.cookie.avatar;
     let name = document.cookie.name;
     let grade = document.cookie.grade;
+    let token = document.cookie.token;
     document.getElementById('panel').innerHTML = `
     <img src='${avatar}'>
     <p>Bienvenue ${name}</p>
@@ -200,48 +202,31 @@
         </div>
     </a>
     `
-</script>
-<script type="text/javascript">
-    $('.button').click(function(){
-        $('.show_1').slideToggle();
-        $('.more').toggleClass('visible');				
-    });
-    $('.button2').click(function(){
-        $('.show_2').slideToggle();
-        $('.more1').toggleClass('visible');		
-    });
-    $('.button3').click(function(){
-        $('.show_3').slideToggle();
-        $('.more2').toggleClass('visible');		
-    });
-    
-    function showHint(name) 
-    {
-        var xhttp;
-        if (name.length == 0)//Chaine = 0 on affiche rien
-        {
-            document.getElementById("name").innerHTML = "<i class='fa fa-book' aria-hidden='true'></i> Home";
-            return;
-        }
-        xhttp = new XMLHttpRequest();
-        xhttp.onreadystatechange = function() 
-        {
-            if (this.readyState == 4 && this.status == 200) 
-            {
-                document.getElementById("name").innerHTML ="<i class='fa fa-book' aria-hidden='true'></i> "+ name;
+    // Fonction pour récupérer la valeur d'un cookie par son nom
+    function getCookieValue(cookieName) {
+            // Divise la chaîne des cookies en un tableau de cookies individuels
+            var cookies = document.cookie.split(';');
+            
+            // Parcourt tous les cookies pour trouver celui avec le nom spécifié
+            for(var i = 0; i < cookies.length; i++) {
+                var cookie = cookies[i];
+                
+                // Supprime les espaces en début et fin de chaîne, si présents
+                while (cookie.charAt(0) == ' ') {
+                    cookie = cookie.substring(1);
+                }
+                
+                // Si le cookie actuel commence par le nom recherché, retourne sa valeur
+                if (cookie.indexOf(cookieName + '=') == 0) {
+                    return cookie.substring(cookieName.length + 1, cookie.length);
+                }
             }
-        };
-        xhttp.open("GET", "gethint.php?q="+name, true);
-        xhttp.send();
-    }	
-</script>
-<script>
-    var load_image = function(event) {
-        var link = document.getElementById('link');
-        link.src = URL.createObjectURL(event.target.files[0]);
-    };
-    var load_background = function(event) {
-        var img_back = document.getElementById('img_back');
-        img_back.src = URL.createObjectURL(event.target.files[0]);
-    };
+            
+            // Si le cookie n'est pas trouvé, retourne null
+            return null;
+        }
+
+        // Exemple d'utilisation
+        var tokenValue = getCookieValue('token');
+        
 </script>
