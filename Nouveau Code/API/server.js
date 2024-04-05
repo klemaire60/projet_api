@@ -262,44 +262,23 @@ app.post('/login', (req, res) => {
                     return res.status(500).json({ message: 'Erreur lors de la récupération du token de l\'utilisateur' });
                 }
 
-                // Si l'utilisateur a déjà un token dans la base de données, mettez à jour le token existant
-                if (results.length > 0) {
-                    const updateTokenQuery = 'UPDATE tokens SET id_token = ?, date_expi = ? WHERE id_account = ?';
-                    const expirationDate = new Date(Date.now() + 2 * 60 * 60 * 1000); // 2 heures à partir de maintenant
-                    connection.query(updateTokenQuery, [token, expirationDate, userId], (err, result) => {
-                        if (err) {
-                            console.error('Erreur lors de la mise à jour du token dans la base de données :', err);
-                            return res.status(500).json({ message: 'Erreur lors de la mise à jour du token dans la base de données' });
-                        }
-                        // Réussite de la mise à jour, renvoyer une réponse avec le token ou toute autre information nécessaire
-                        return res.json({
-                            body: body,
-                            token: token,
-                            name: currentUser.pseudo,
-                            grade: currentUser.user_level,
-                            avatar: currentUser.user_avatar
-                        });
-                    });
-                } else {
-                    // Si l'utilisateur n'a pas encore de token, insérez-le comme expliqué dans la réponse précédente
-                    const insertTokenQuery = 'INSERT INTO tokens (id_token, id_account, date_expi) VALUES (?, ?, ?)';
-                    const expirationDate = new Date(Date.now() + 2 * 60 * 60 * 1000); // 2 heures à partir de maintenant
-                    connection.query(insertTokenQuery, [token, userId, expirationDate], (err, result) => {
+                if (results.length <= 0) {
+                    // Si l'utilisateur n'a pas encore de token, insertion
+                    const insertTokenQuery = 'INSERT INTO tokens (id_token, id_account) VALUES (?, ?)';
+                    connection.query(insertTokenQuery, [token, userId], (err, result) => {
                         if (err) {
                             console.error('Erreur lors de l\'insertion du token dans la base de données :', err);
                             return res.status(500).json({ message: 'Erreur lors de l\'insertion du token dans la base de données' });
-                        }
-                        // Réussite de l'insertion, renvoyer une réponse avec le token ou toute autre information nécessaire
-                        return res.json({
-                            body: body,
-                            token: token,
-                            name: currentUser.pseudo,
-                            grade: currentUser.user_level,
-                            avatar: currentUser.user_avatar
-                        });
-                        
+                        }     
                     });
                 }
+                return res.json({
+                  body: body,
+                  token: token,
+                  name: currentUser.pseudo,
+                  grade: currentUser.user_level,
+                  avatar: currentUser.user_avatar
+              });
             });
           });
         });
@@ -324,6 +303,46 @@ app.post('/login', (req, res) => {
       return res.json({ body: body });
     }
   });
+});
+
+app.post('/logout', (req, res) => {
+  // Supprimer le token de la base de données
+  const userId = req.user.id_account;
+  const deleteTokenQuery = 'DELETE FROM tokens WHERE id_account = ?';
+  connection.query(deleteTokenQuery, [userId], (err, result) => {
+      if (err) {
+          console.error('Erreur lors de la suppression du token de l\'utilisateur :', err);
+          return res.status(500).json({ message: 'Erreur lors de la déconnexion' });
+      }
+      // Supprimer le cookie côté client
+      res.clearCookie('token');
+
+      return res.json({ message: 'Déconnexion réussie' });
+  });
+});
+
+app.use((req, res, next) => {
+  // Récupérer le token depuis les cookies de la requête
+  const token = req.cookies.token;
+
+  // Vérifier si le token est présent
+  if (!token) {
+      return res.status(401).json({ message: 'Token manquant, veuillez vous connecter.' });
+  }
+
+  try {
+      // Vérifier et décoder le token
+      const decoded = jwt.verify(token, 'secret_key');
+      req.user = decoded;
+      next();
+  } catch (error) {
+      return res.status(401).json({ message: 'Token invalide ou expiré, veuillez vous connecter à nouveau.' });
+  }
+});
+
+// Route pour vérifier l'authentification (check-auth)
+app.get('/check-auth', (req, res) => {
+  return res.json({ message: 'Utilisateur authentifié.', user: req.user });
 });
 
 app.post('/register', (req, res) => {

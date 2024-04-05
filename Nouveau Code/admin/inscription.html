@@ -201,32 +201,25 @@
             <i class='fa fa-user' aria-hidden='true'>Mon compte</i>
         </div>
     </a>
-    `
-    // Fonction pour récupérer la valeur d'un cookie par son nom
-    function getCookieValue(cookieName) {
-            // Divise la chaîne des cookies en un tableau de cookies individuels
-            var cookies = document.cookie.split(';');
-            
-            // Parcourt tous les cookies pour trouver celui avec le nom spécifié
-            for(var i = 0; i < cookies.length; i++) {
-                var cookie = cookies[i];
-                
-                // Supprime les espaces en début et fin de chaîne, si présents
-                while (cookie.charAt(0) == ' ') {
-                    cookie = cookie.substring(1);
-                }
-                
-                // Si le cookie actuel commence par le nom recherché, retourne sa valeur
-                if (cookie.indexOf(cookieName + '=') == 0) {
-                    return cookie.substring(cookieName.length + 1, cookie.length);
-                }
-            }
-            
-            // Si le cookie n'est pas trouvé, retourne null
-            return null;
-        }
-
-        // Exemple d'utilisation
-        var tokenValue = getCookieValue('token');
-        
+    `   
 </script>
+<script>
+    // Fonction pour vérifier la connexion de l'utilisateur
+    function checkAuth() {
+            fetch('/check-auth')
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Erreur lors de la vérification de l\'authentification');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    // Si l'utilisateur est connecté et authentifié, ne rien faire
+                    console.log('L\'utilisateur est authentifié');
+                })
+                .catch(error => {
+                    console.error(error);
+                    // Rediriger l'utilisateur vers la page de connexion s'il n'est pas authentifié
+                    window.location.href = '/login.html';
+                });
+        }</script>

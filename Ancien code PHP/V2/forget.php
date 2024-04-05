@@ -74,7 +74,7 @@
 				mail($to, $subject, $message, $headers);
 				
 				$id_user=$donnees[10];
-				$requete = mysql_query("INSERT INTO tokens(id_token,id_account,date_expi)VALUES('".$token."',".$id_user.",(NOW()+INTERVAL 10 MINUTE))");
+				$requete = mysql_query("INSERT INTO tokens(id_token,id_account)VALUES('".$token."',".$id_user.",(NOW()+INTERVAL 10 MINUTE))");
 				//on teste si la requete est bien passé
 				if(!$requete)
 				{
@@ -99,7 +99,7 @@
 		{
 			connexion();			
 			$token=$_SESSION['mdpget'];
-			$reponse=mysql_query("SELECT * FROM tokens WHERE id_token='".$token."'AND date_expi>=NOW()");// 
+			$reponse=mysql_query("SELECT * FROM tokens WHERE id_token='".$token."'");// 
 			//on parcoure la reponse sql
 			while ($donnees = mysql_fetch_array($reponse))
 			{
